@@ -1,0 +1,15 @@
+[package]
+name = "foam-highlighter"
+description = "Highlight OpenFOAM dictionaries as HTML snippets"
+repository = "https://github.com/FoamScience/foam-highlighter"
+readme = "README.md"
+keywords = ["config", "configuration", "settings", "env", "environment"]
+authors = ["Mohammed Elwardi Fadeli <elwardifadeli@gmail.com>"]
+categories = ["Parsing tools"]
+license = "MIT/Apache-2.0"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+tree-sitter-highlight = "0.20.1"
+tree-sitter-foam = "0.1.2"
