@@ -8,7 +8,8 @@ fn main() -> io::Result<()> {
 
     // CMD args setup
     let args: Vec<String> = env::args().collect();
-    let filename = &args[1];
+    let format = &args[1];
+    let filename = &args[2];
 
     // Read content of file
     let buffer = fs::read_to_string(&filename)?;
@@ -41,6 +42,21 @@ fn main() -> io::Result<()> {
         "hljs-type",
     ];
 
+    // This has to reflect the order of highlights
+    let pygtex_classes : &[_] = &[
+        "k",
+        "c+c1",
+        "kt",
+        "kt",
+        "l+m+mf",
+        "vc",
+        "gp",
+        "o",
+        "l+s",
+        "kp",
+    ];
+
+
 
     let mut highlighter = Highlighter::new();
     let mut foam_config = HighlightConfiguration::new(
@@ -67,28 +83,75 @@ fn main() -> io::Result<()> {
     //).unwrap();
     
 
-    println!("<pre><code class=\"language-foam hljs\">");
-    for event in highlights {
-        match event.unwrap() {
-            HighlightEvent::Source {start, end} => {
-                let slice = &source[start..end];
-                let s = match std::str::from_utf8(slice) {
-                    Ok(v) => v,
-                    Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-                };
-                print!("{}", s);
-            },
-            HighlightEvent::HighlightStart(s) => {
-                //eprintln!("highlight style started: {:?}", s);
-                let hl : usize = s.0.try_into().unwrap();
-                print!("<span class={:?}>", css_classes[hl]);
-            },
-            HighlightEvent::HighlightEnd => {
-                //eprintln!("highlight style ended");
-                print!("</span>");
-            },
+    if format == "html" {
+        println!("<pre><code class=\"language-foam hljs\">");
+        for event in highlights {
+            match event.unwrap() {
+                HighlightEvent::Source {start, end} => {
+                    let slice = &source[start..end];
+                    let s = match std::str::from_utf8(slice) {
+                        Ok(v) => v,
+                        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+                    };
+                    print!("{}", s);
+                },
+                HighlightEvent::HighlightStart(s) => {
+                    //eprintln!("highlight style started: {:?}", s);
+                    let hl : usize = s.0.try_into().unwrap();
+                    print!("<span class={:?}>", css_classes[hl]);
+                },
+                HighlightEvent::HighlightEnd => {
+                    //eprintln!("highlight style ended");
+                    print!("</span>");
+                },
+            }
         }
+        println!("</code></pre>");
+    } else if format == "pygtex" {
+        for event in highlights {
+            match event.unwrap() {
+                HighlightEvent::Source {start, end} => {
+                    let slice = &source[start..end];
+                    let s = match std::str::from_utf8(slice) {
+                        Ok(v) => v,
+                        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+                    };
+
+                    print!(
+                        "{}", 
+                        s.replace("\\", "\\PYGZbs")
+                         .replace("}", "\\PYGZcb")
+                         .replace("{", "\\PYGZob")
+                         .replace("\\PYGZob", "\\PYGZob{}")
+                         .replace("\\PYGZcb", "\\PYGZcb{}")
+                         .replace("\\PYGZbs", "\\PYGZbs{}")
+                         .replace("_", "\\PYGZus{}")
+                         .replace("^", "\\PYGZca{}")
+                         .replace("&", "\\PYGZam{}")
+                         .replace("<", "\\PYGZlt{}")
+                         .replace(">", "\\PYGZgt{}")
+                         .replace("#", "\\PYGZsh{}")
+                         .replace("%", "\\PYGZpc{}")
+                         .replace("$", "\\PYGZdl{}")
+                         .replace("-", "\\PYGZhy{}")
+                         .replace("\'", "\\PYGZsq{}")
+                         .replace("\"", "\\PYGZdq{}")
+                         .replace("~", "\\PYGZti{}")
+                    );
+                },
+                HighlightEvent::HighlightStart(s) => {
+                    //eprintln!("highlight style started: {:?}", s);
+                    let hl : usize = s.0.try_into().unwrap();
+                    print!("\\PYG{{{}}}{{", pygtex_classes[hl]);
+                },
+                HighlightEvent::HighlightEnd => {
+                    //eprintln!("highlight style ended");
+                    print!("}}");
+                },
+            }
+        }
+    } else {
+        eprintln!("Parsed input but no valid output format is provided. Available options: html or pygtex");
     }
-    println!("</code></pre>");
     Ok(())
 }
