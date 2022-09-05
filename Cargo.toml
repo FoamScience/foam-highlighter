@@ -1,13 +1,13 @@
 [package]
 name = "foam-highlighter"
-description = "Highlight OpenFOAM dictionaries as HTML snippets"
+description = "Highlight OpenFOAM dictionaries as HTML and/or Pygtex snippets"
 repository = "https://github.com/FoamScience/foam-highlighter"
 readme = "README.md"
 keywords = ["highlight", "openfoam", "parse"]
 authors = ["Mohammed Elwardi Fadeli <elwardifadeli@gmail.com>"]
-categories = ["Parsing tools"]
+categories = ["parser-implementations", "parsing"]
 license = "MIT/Apache-2.0"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 
 [dependencies]
