@@ -3,13 +3,14 @@ name = "foam-highlighter"
 description = "Highlight OpenFOAM dictionaries as HTML and/or Pygtex snippets"
 repository = "https://github.com/FoamScience/foam-highlighter"
 readme = "README.md"
-keywords = ["highlight", "openfoam", "parse"]
+keywords = ["highlight", "openfoam", "parse", "presentation"]
 authors = ["Mohammed Elwardi Fadeli <elwardifadeli@gmail.com>"]
 categories = ["parser-implementations", "parsing"]
 license = "MIT/Apache-2.0"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2018"
 
 [dependencies]
 tree-sitter-highlight = "0.20.1"
 tree-sitter-foam = "0.1.3"
+regex = "1.6.0"
