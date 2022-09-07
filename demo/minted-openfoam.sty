@@ -1,0 +1,165 @@
+%%
+%% This is file `minted-openfoam.sty',
+%%
+%% Applies some trickery to minted macros to be able to fake highlighting OpenFOAM snippets
+%% with foam-highlighter utility (Still needs pygmentize for some decorations) in case a
+%% boolean UseFoamHLT is true (default)
+%% 
+%% Original behavior (by Geoffrey M. Poore and Konrad Rudolph) can be turned on
+%% simply by setting the UseFoamHLT bool to false
+%%  
+%% Additionally, the file may be distributed under the terms of the new BSD
+%% license.
+%% 
+%% The Current Maintainer of this work is Mohammed Elwardi Fadeli.
+\makeatletter
+\newif\ifusefoamhlt
+\usefoamhlttrue
+\providecommand{\escapeinsidechar}{?}
+\def\escapeinsidechar{?}
+\renewcommand{\minted@pygmentize}[2][\minted@outputdir\minted@jobname.pyg]{%
+  \minted@checkstyle{\minted@get@opt{style}{default}}%
+  \stepcounter{minted@pygmentizecounter}%
+  \ifthenelse{\equal{\minted@get@opt{autogobble}{false}}{true}}%
+    {\def\minted@codefile{\minted@outputdir\minted@jobname.pyg}}%
+    {\def\minted@codefile{#1}}%
+  \ifthenelse{\boolean{minted@isinline}}%
+    {\def\minted@optlistcl@inlines{%
+      \minted@optlistcl@g@i
+      \csname minted@optlistcl@lang\minted@lang @i\endcsname}}%
+    {\let\minted@optlistcl@inlines\@empty}%
+  \def\minted@cmd{%
+    \ifminted@kpsewhich
+      \ifwindows
+        \detokenize{for /f "usebackq tokens=*"}\space\@percentchar\detokenize{a in (`kpsewhich}\space\minted@codefile\detokenize{`) do}\space
+      \fi
+    \fi%
+    \ifusefoamhlt
+        %% Trickery to use the foam-highlighter package
+        %% Download from https://github.com/FoamScience/foam-highlighter
+        echo "" | \MintedPygmentize\space -l #2
+        -f latex -P commandprefix=PYG -F tokenmerge
+        \minted@optlistcl@g \csname minted@optlistcl@lang\minted@lang\endcsname
+        \minted@optlistcl@inlines
+        \minted@optlistcl@cmd\space | head -1 >  \minted@outputdir\minted@infile\space &&
+        foam-highlighter\space pygtex\space
+        \ifminted@kpsewhich
+          \ifwindows
+            \@percentchar\detokenize{a}%
+          \else
+            \detokenize{`}kpsewhich \minted@codefile\space
+              \detokenize{||} \minted@codefile\detokenize{`}%
+          \fi
+        \else
+          \minted@codefile
+        \fi\space%
+        \detokenize{'}\escapeinsidechar\detokenize{'}\space >> \minted@outputdir\minted@infile\space &&
+        echo "" | \MintedPygmentize\space -l #2
+        -f latex -P commandprefix=PYG -F tokenmerge
+        \minted@optlistcl@g \csname minted@optlistcl@lang\minted@lang\endcsname
+        \minted@optlistcl@inlines
+        \minted@optlistcl@cmd\space | tail -1 >>  \minted@outputdir\minted@infile\space%
+    \else
+        %% Original behavior
+        \MintedPygmentize\space -l #2
+        -f latex -P commandprefix=PYG -F tokenmerge
+        \minted@optlistcl@g \csname minted@optlistcl@lang\minted@lang\endcsname
+        \minted@optlistcl@inlines
+        \minted@optlistcl@cmd -o \minted@outputdir\minted@infile\space
+        \ifminted@kpsewhich
+          \ifwindows
+            \@percentchar\detokenize{a}%
+          \else
+            \detokenize{`}kpsewhich \minted@codefile\space
+              \detokenize{||} \minted@codefile\detokenize{`}%
+          \fi
+        \else
+          \minted@codefile
+        \fi%
+    \fi}%
+  % For debugging, uncomment: %%%%
+  \immediate\typeout{\minted@cmd}%
+  % %%%%
+  \ifthenelse{\boolean{minted@cache}}%
+    {%
+      \ifminted@frozencache
+      \else
+        \ifx\XeTeXinterchartoks\minted@undefined
+          \ifthenelse{\equal{\minted@get@opt{autogobble}{false}}{true}}%
+            {\edef\minted@hash{\pdf@filemdfivesum{#1}%
+              \pdf@mdfivesum{\minted@cmd autogobble(\ifx\FancyVerbStartNum\z@ 0\else\FancyVerbStartNum\fi-\ifx\FancyVerbStopNum\z@ 0\else\FancyVerbStopNum\fi)}}}%
+            {\edef\minted@hash{\pdf@filemdfivesum{#1}%
+              \pdf@mdfivesum{\minted@cmd}}}%
+        \else
+          \ifx\mdfivesum\minted@undefined
+            \immediate\openout\minted@code\minted@jobname.mintedcmd\relax
+            \immediate\write\minted@code{\minted@cmd}%
+            \ifthenelse{\equal{\minted@get@opt{autogobble}{false}}{true}}%
+              {\immediate\write\minted@code{autogobble(\ifx\FancyVerbStartNum\z@ 0\else\FancyVerbStartNum\fi-\ifx\FancyVerbStopNum\z@ 0\else\FancyVerbStopNum\fi)}}{}%
+            \immediate\closeout\minted@code
+            \edef\minted@argone@esc{#1}%
+            \StrSubstitute{\minted@argone@esc}{\@backslashchar}{\@backslashchar\@backslashchar}[\minted@argone@esc]%
+            \StrSubstitute{\minted@argone@esc}{"}{\@backslashchar"}[\minted@argone@esc]%
+            \edef\minted@tmpfname@esc{\minted@outputdir\minted@jobname}%
+            \StrSubstitute{\minted@tmpfname@esc}{\@backslashchar}{\@backslashchar\@backslashchar}[\minted@tmpfname@esc]%
+            \StrSubstitute{\minted@tmpfname@esc}{"}{\@backslashchar"}[\minted@tmpfname@esc]%
+            %Cheating a little here by using ASCII codes to write `{` and `}`
+            %in the Python code
+            \def\minted@hashcmd{%
+              \detokenize{python -c "import hashlib; import os;
+                hasher = hashlib.sha1();
+                f = open(os.path.expanduser(os.path.expandvars(\"}\minted@tmpfname@esc.mintedcmd\detokenize{\")), \"rb\");
+                hasher.update(f.read());
+                f.close();
+                f = open(os.path.expanduser(os.path.expandvars(\"}\minted@argone@esc\detokenize{\")), \"rb\");
+                hasher.update(f.read());
+                f.close();
+                f = open(os.path.expanduser(os.path.expandvars(\"}\minted@tmpfname@esc.mintedmd5\detokenize{\")), \"w\");
+                macro = \"\\edef\\minted@hash\" + chr(123) + hasher.hexdigest() + chr(125) + \"\";
+                f.write(\"\\makeatletter\" + macro + \"\\makeatother\\endinput\n\");
+                f.close();"}}%
+            \ShellEscape{\minted@hashcmd}%
+            \minted@input{\minted@outputdir\minted@jobname.mintedmd5}%
+          \else
+            \ifthenelse{\equal{\minted@get@opt{autogobble}{false}}{true}}%
+             {\edef\minted@hash{\mdfivesum file {#1}%
+                \mdfivesum{\minted@cmd autogobble(\ifx\FancyVerbStartNum\z@ 0\else\FancyVerbStartNum\fi-\ifx\FancyVerbStopNum\z@ 0\else\FancyVerbStopNum\fi)}}}%
+             {\edef\minted@hash{\mdfivesum file {#1}%
+                \mdfivesum{\minted@cmd}}}%
+          \fi
+        \fi
+        \edef\minted@infile{\minted@cachedir/\minted@hash.pygtex}%
+        \IfFileExists{\minted@infile}{}{%
+          \ifthenelse{\equal{\minted@get@opt{autogobble}{false}}{true}}{%
+            \minted@autogobble{#1}}{}%
+          \ShellEscape{\minted@cmd}}%
+      \fi
+      \ifthenelse{\boolean{minted@finalizecache}}%
+       {%
+          \edef\minted@cachefilename{listing\arabic{minted@pygmentizecounter}.pygtex}%
+          \edef\minted@actualinfile{\minted@cachedir/\minted@cachefilename}%
+          \ifwindows
+            \StrSubstitute{\minted@infile}{/}{\@backslashchar}[\minted@infile@windows]
+            \StrSubstitute{\minted@actualinfile}{/}{\@backslashchar}[\minted@actualinfile@windows]
+            \ShellEscape{move /y \minted@outputdir\minted@infile@windows\space\minted@outputdir\minted@actualinfile@windows}%
+          \else
+            \ShellEscape{mv -f \minted@outputdir\minted@infile\space\minted@outputdir\minted@actualinfile}%
+          \fi
+          \let\minted@infile\minted@actualinfile
+          \expandafter\minted@addcachefile\expandafter{\minted@cachefilename}%
+       }%
+       {\ifthenelse{\boolean{minted@frozencache}}%
+         {%
+            \edef\minted@cachefilename{listing\arabic{minted@pygmentizecounter}.pygtex}%
+            \edef\minted@infile{\minted@cachedir/\minted@cachefilename}%
+            \expandafter\minted@addcachefile\expandafter{\minted@cachefilename}}%
+         {\expandafter\minted@addcachefile\expandafter{\minted@hash.pygtex}}%
+       }%
+      \minted@inputpyg}%
+    {%
+      \ifthenelse{\equal{\minted@get@opt{autogobble}{false}}{true}}{%
+        \minted@autogobble{#1}}{}%
+      \ShellEscape{\minted@cmd}%
+      \minted@inputpyg}%
+}
+\makeatother

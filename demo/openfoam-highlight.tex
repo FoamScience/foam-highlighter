@@ -1,0 +1,30 @@
+\documentclass[9pt]{article}
+
+%% A minimal example of working OpenFOAM highlighting using minted
+%% Compiles with all major engines (pdflatex, lualatex and xelatex)
+
+\usepackage{amsmath, amsfonts}
+\usepackage{tikz}
+\usetikzlibrary{tikzmark}
+\usepackage[cachedir=_minted-cache]{minted}
+\makeatletter
+\def\minted@jobname{openfoam-highlight}
+\makeatother
+%% Step 0: include the provided sty file
+\input{minted-openfoam.sty}
+
+\begin{document}
+    %% Turn on Foam Highlighter in this section
+    \usefoamhlttrue
+    %% Use ?? for Tex escape inside the highlighter
+    \renewcommand{\escapeinsidechar}{?}
+
+    \LaTeX code and math mode in OpenFOAM comments
+    \tikz[remember picture,overlay,baseline=0pt] \draw[->,thick,dashed,blue] (0,-0.5em)
+    to[bend left] ([shift={(1ex,1ex)}]pic cs:code); and even inline OpenFOAM expressions
+    \mintinline{cpp}{key val;} get highlighted.
+    \inputminted[escapeinside=??]{cpp}{of-dicts/sampleDict}
+
+    %% Turn if off to render other code snippets normally
+    \usefoamhltfalse
+\end{document}

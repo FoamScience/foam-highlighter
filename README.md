@@ -37,7 +37,9 @@ We're also depending on [OpenFOAM grammar for Tree-Sitter](https://github.com/Fo
 which can parse all tutorial files from OpenFOAM 8 and Foam-Extend 4 repositories.
 If you suspect there is an issue with the parser, please open an issue there.
 
-## Example usage
+## Potential use cases
+
+### Highlighted HTML code blocks
 
 Consider the following OpenFOAM dictionary:
 
@@ -54,7 +56,8 @@ dict {
 }
 ```
 
-Running the highlighter with `foam-highlighter html dictName` returns:
+Running the highlighter with `foam-highlighter html dictName` returns a populated code tag which
+can be used in HTML documents:
 ```html
 <pre><code class="language-foam hljs">
 <span class="hljs-comment">// this is ?{\color{orange} \LaTeX code}?</span>
@@ -70,46 +73,60 @@ Running the highlighter with `foam-highlighter html dictName` returns:
 </code></pre>
 ```
 
-While running it with `foam-highlighter pygtex dictName '?'`  returns:
-```tex
-\PYG{c+c1}{// this is {\color{orange} \LaTeX code}}
-\PYG{vc}{key} val\PYG{o}{;}
-\PYG{kp}{dict} \PYG{o}{\PYGZob{}}
-    \PYG{vc}{key1} \PYG{l+s}{\PYGZdq{}val\PYGZdq{}}\PYG{o}{;}
-    \PYG{kp}{key2} \PYG{o}{\PYGZob{}}
-        \PYG{c+c1}{/*}
-\PYG{c+c1}{            More \LaTeX code if you want: $\phi$}
-\PYG{c+c1}{        */}
-    \PYG{o}{\PYGZcb{}}
-\PYG{o}{\PYGZcb{}}
-```
-Which you can use in a Latex document by copying it into the `Verbatim` environment of the corresponding
-`*.pygtex` cache file for an empty `minted` environment:
-```tex
+### Highlighted code listings in Tex documents through `minted`
 
+For usage within LaTeX documents, a bit of special treatment is needed which is demonstrated
+by the [demo](demo/) files where some modifications to the minted macros is carried out so
+it calls the highlighter instead of `pygmentize` only in the actual highlighting operation.
+
+For convenience, the user of the [minted-openfoam.sty](demo/minted-openfoam.sty) file can toggle
+between this behavior and the original one (for highlighting other code snippets).
+
+The Tex file looks like this:
+```tex
 \documentclass[9pt]{article}
 
-%% A minimal example of working OpenFOAM hilighting using minted
+%% A minimal example of working OpenFOAM highlighting using minted
 %% Compiles with all major engines (pdflatex, lualatex and xelatex)
 
 \usepackage{amsmath, amsfonts}
+\usepackage{tikz}
+\usetikzlibrary{tikzmark}
 \usepackage[cachedir=_minted-cache]{minted}
 \makeatletter
 \def\minted@jobname{openfoam-highlight}
 \makeatother
+%% Step 0: include the provided sty file
+\input{minted-openfoam.sty}
 
 \begin{document}
-    %% Source: dictName
-    %% Cache file: D41D8CD98F00B204E9800998ECF8427EBC2AC3F26D5FFE2ED2ACF73E1678E792.pygtex
-    \begin{minted}[escapeinside=??, linenos]{cpp}
-    \end{minted}
+    %% Turn on Foam Highlighter in this section
+    \usefoamhlttrue
+    %% Use ?? for Tex escape inside the highlighter
+    \renewcommand{\escapeinsidechar}{?}
+
+    \LaTeX code and math mode in OpenFOAM comments
+    \tikz[remember picture,overlay,baseline=0pt] \draw[->,thick,dashed,blue] (0,-0.5em)
+    to[bend left] ([shift={(1ex,1ex)}]pic cs:code); and even inline OpenFOAM expressions
+    \mintinline{cpp}{key val;} get highlighted.
+    \inputminted[escapeinside=??]{cpp}{of-dicts/sampleDict}
+
+    %% Turn if off to render other code snippets normally
+    \usefoamhltfalse
 \end{document}
 ```
-By doing this, you get nicely highlighted OpenFOAM dictionaries in Latex documents with the ability
-to run arbitrary Tex code in the OpenFOAM comments
 
-> Note that the `escapeinside=??` minted option needs to what's used in the OpenFOAM dictionary
+By doing this, you get nicely highlighted OpenFOAM dictionaries in Latex documents with the ability
+to run arbitrary Tex code in the OpenFOAM comments.
+
+> Note 1: the `escapeinside=??` minted option needs to what's used in the OpenFOAM dictionary
 > and the last (optional) parameter to the highlighter
+
+> Note 2: `escapeinside` is the only supported minted option which relates to the input file's content.
+> E.g. `mathescape` and the like are not supported by the highlighter
 
 Sounds painful? Well this is the best we can do - The only other option is to write a Pygments Lexer
 for OpenFOAM case files; and nobody will do that!
+
+> To see what's supported by the parser, head over to 
+> [OpenFOAM grammar for Tree-Sitter](https://github.com/FoamScience/tree-sitter-foam)
