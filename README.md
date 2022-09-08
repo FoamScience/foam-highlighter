@@ -6,11 +6,14 @@
 
 ## Installation & Usage
 
-As this is a Rust (mini) project, you'll have to have `cargo` installed:
+As this is a Rust (mini) project, if you have `cargo` installed:
 
 ```bash
 cargo install foam-highlighter
 ```
+
+Otherwise, use the AppImage provided in the [Releases page](https://github.com/FoamScience/foam-highlighter/releases)
+(only for the x86-64 architecture).
 
 Then, provide both the output format and the input filename to parse:
 ```bash
