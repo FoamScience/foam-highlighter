@@ -119,10 +119,7 @@ The Tex file looks like this:
 By doing this, you get nicely highlighted OpenFOAM dictionaries in Latex documents with the ability
 to run arbitrary Tex code in the OpenFOAM comments.
 
-> Note 1: the `escapeinside=??` minted option needs to what's used in the OpenFOAM dictionary
-> and the last (optional) parameter to the highlighter
-
-> Note 2: `escapeinside` is the only supported minted option which relates to the input file's content.
+> Note : `escapeinside` is the only supported minted option which relates to the input file's content.
 > E.g. `mathescape` and the like are not supported by the highlighter
 
 Sounds painful? Well this is the best we can do - The only other option is to write a Pygments Lexer
